@@ -4,7 +4,8 @@
   "description": "A starter Koa app with OAuth2 routes",
   "main": "index.js",
   "scripts": {
-    "test": "mocha './test/**/*.test.js'"
+    "dev": "node -r dotenv/config index.js",
+    "test": "mocha -r esm './test/**/*.test.js'"
   },
   "author": "",
   "license": "ISC",
@@ -16,7 +17,9 @@
     "sinon": "^6.3.1"
   },
   "dependencies": {
+    "dotenv": "^6.0.0",
     "esm": "^3.0.82",
-    "koa": "^2.5.3"
+    "koa": "^2.5.3",
+    "mongodb": "^3.1.6"
   }
 }

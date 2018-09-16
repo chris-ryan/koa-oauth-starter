@@ -1,13 +1,16 @@
 import * as chai from 'chai';
-import * as chaiHttp from 'chai-http'
-import { server } from '../src/index';
-const should = chai.should();
+import chaiAsPromised from 'chai-as-promised';
+import chaiHttp from 'chai-http'
+import { app } from '../../src/index';
+
+chai.use(chaiAsPromised);
 chai.use(chaiHttp);
+const should = chai.should();
 
 describe('routes : index', function() {
   describe('GET /', function() {
     it('should return json', function(done){
-      chai.request(server).get('/')
+      chai.request(app.callback()).get('/')
       .end((err,res) => {
         should.not.exist(err);
         res.status.should.eql(200);
@@ -17,5 +20,5 @@ describe('routes : index', function() {
         done();
       })
     })
-  }
+  })
 });

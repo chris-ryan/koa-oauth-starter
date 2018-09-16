@@ -6,12 +6,14 @@ const PORT = 8080;
 app.use(async (ctx) => {
   ctx.body = {
     status: 'success',
-    message: 'hello world!'
+    message: 'hello, world!'
   };
 });
 
-const server = app.listen(PORT, () => {
+export { app }
+
+app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 })
 
-module.exports = server;
+
