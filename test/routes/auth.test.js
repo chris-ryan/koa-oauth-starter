@@ -1,17 +1,19 @@
-process.env.NODE_ENV = 'test';
 
 import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiHttp from 'chai-http'
+// import dotenv from 'dotenv';
 import { app } from '../../src/index';
+import User from '../../src/api/users/model';
 
 chai.use(chaiAsPromised);
 chai.use(chaiHttp);
 const should = chai.should();
+// dotenv.config();
 
 // const knex = require('../src/server/db/connection');
 
-  describe('routes : auth', function() {
+describe('routes : auth', function() {
 
 //   beforeEach(() => {
 //     return knex.migrate.rollback()
@@ -22,8 +24,6 @@ const should = chai.should();
 //   afterEach(() => {
 //     return knex.migrate.rollback();
 //   });
-
-// });
 
   describe('GET /auth/login', function() {
     it('should render the login view', function(done) {
@@ -41,4 +41,36 @@ const should = chai.should();
       });
     });
   });
+
+  describe('user-interactions', function() {
+    let user = {};
+    before(function seedTestUser() {
+      let username = 'example';
+      let passwordHash = User.hashPassword('abacus');
+      user = new User({
+        username,
+        passwordHash,
+      });
+      user.save();
+    });
+    describe('POST /auth/login', () => {
+      it('should login a user', (done) => {
+        chai.request(app.callback())
+        .post('/auth/login')
+        .send({
+          username: 'example',
+          password: 'abacus'
+        })
+        .end((err, res) => {
+          res.redirects[0].should.contain('/auth/status');
+          done();
+        });
+      });
+    });
+    after(async function deleteTestUser(){
+      user.delete().then(()=> {
+        console.log('test user deleted');
+      }).catch((err) => {console.error(err)}); 
+    })
+  })
 });
