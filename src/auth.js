@@ -19,7 +19,6 @@ passport.use(new LocalStrategy(options, async (username, password, done) => {
   const user = await collection.findOne({ 'username': username })
   .catch((err) => { return done(err); });
   if (!user) return done(null, false);
-  console.log(user);
   bcrypt.compare(password, user.passwordHash, function(err,res) {
     if(err){ console.error(err) }
     if(res) return done(null, user);

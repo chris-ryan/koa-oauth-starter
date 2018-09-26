@@ -16,6 +16,10 @@ export default class User {
     return await collection.deleteOne({'username': this.username});
   }
 
+  async exists(){
+    return await this.constructor.findByUsername(this.username); // returns null if not found
+  }
+
   async save() {
     const collection = await getCollection('users').catch(err => console.error(err));
     let result = {};
@@ -29,10 +33,15 @@ export default class User {
       result = await collection.insertOne(this)
       .catch(err => console.error(err));
     }
-    console.log(result.insertedId);
+    return result.insertedId;
   }
   
   // STATIC METHODS
+  static async findByUsername(username){
+    const collection = await getCollection('users').catch(err => console.error(err));
+    return await collection.findOne({'username': username});
+  }
+
   static hashPassword(password){
     console.log('hashing password');
     const saltRounds = 5;

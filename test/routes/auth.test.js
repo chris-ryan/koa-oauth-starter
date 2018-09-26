@@ -45,7 +45,7 @@ describe('routes : auth', function() {
   describe('user-interactions', function() {
     let user = {};
     before(function seedTestUser() {
-      let username = 'example';
+      let username = 'auth-test';
       let passwordHash = User.hashPassword('abacus');
       user = new User({
         username,
@@ -58,7 +58,7 @@ describe('routes : auth', function() {
         chai.request(app.callback())
         .post('/auth/login')
         .send({
-          username: 'example',
+          username: 'auth-test',
           password: 'abacus'
         })
         .end((err, res) => {
