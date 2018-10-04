@@ -1,16 +1,25 @@
 import * as bcrypt from 'bcrypt';
 import passport from 'koa-passport';
 import LocalStrategy from 'passport-local';
+import { ObjectID } from 'mongodb';
 import { getCollection } from './db/index';
 
 const options = {};
 
-passport.serializeUser((user, done) => { done(null, user._id); });
+passport.serializeUser((user, done) => {
+  console.log('serializing user');
+  let userId = new ObjectID(user._id);
+  done(null, userId.toHexString());
+});
 
 passport.deserializeUser(async (id, done) => {
+  console.log(`deserializing user: ${id}`)
   const collection = await getCollection('users');
   return collection.findOne({_id: id})
-  .then((user) => { done(null, user); })
+  .then((user) => {
+    console.log(`deserialized user: ${user}`)
+    done(null, user);
+  })
   .catch((err) => { done(err,null); });
 });
 

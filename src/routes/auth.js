@@ -14,11 +14,14 @@ authRoutes.get('/auth/login', async (ctx) => {
   }
 })
 
+authRoutes.get('/auth/status', userStatus);
+
 authRoutes.post('/auth/login', async (ctx) => {
   console.log('authenticating user login');
   return passport.authenticate('local', (err, user, info, status) => {
     if (user) {
       ctx.login(user);
+      console.log('redirecting to auth/status');
       ctx.redirect('/auth/status');
     } else {
       ctx.status = 400;
@@ -26,7 +29,5 @@ authRoutes.post('/auth/login', async (ctx) => {
     }
   })(ctx);
 });
-
-authRoutes.get('/auth/status', userStatus);
 
 export { authRoutes }

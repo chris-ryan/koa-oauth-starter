@@ -38,6 +38,7 @@ const app = new Koa();
 
 dbConnect().then(() => {
   console.log('database connected');
+  // sessions
   app.keys = ['fh784tu03fgyerfh2gf9refiy23f9423'];
   app.use(session({
     store: getSessionStore()
