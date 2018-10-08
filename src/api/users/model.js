@@ -1,11 +1,12 @@
 import * as bcrypt from 'bcrypt';
+import { ObjectID } from 'mongodb';
 import { getCollection } from '../../db/index';
 
 export default class User {
   constructor(user) {
     // required properties
     this.username = user.username;
-    this.passwordHash = user.passwordHash;
+    this.password = user.password;
     //optional properties
     if (user._id) this._id = user._id;
   }
@@ -37,6 +38,11 @@ export default class User {
   }
   
   // STATIC METHODS
+  static async findById(id){
+    id = new ObjectID(id);
+    const collection = await getCollection('users').catch(err => console.error(err));
+    return await collection.findOne({'_id': id});
+  }
   static async findByUsername(username){
     const collection = await getCollection('users').catch(err => console.error(err));
     return await collection.findOne({'username': username});

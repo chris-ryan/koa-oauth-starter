@@ -14,6 +14,16 @@ authRoutes.get('/auth/login', async (ctx) => {
   }
 })
 
+authRoutes.get('/auth/logout', async (ctx) => {
+  if (ctx.isAuthenticated()) {
+    ctx.logout();
+    ctx.redirect('/auth/login');
+  } else {
+    ctx.body = { success: false };
+    ctx.throw(401);
+  }
+});
+
 authRoutes.get('/auth/status', userStatus);
 
 authRoutes.post('/auth/login', async (ctx) => {
@@ -21,6 +31,7 @@ authRoutes.post('/auth/login', async (ctx) => {
   return passport.authenticate('local', (err, user, info, status) => {
     if (user) {
       ctx.login(user);
+      console.log(`ctx.req.user: ${ctx.req.user}`);
       console.log('redirecting to auth/status');
       ctx.redirect('/auth/status');
     } else {

@@ -13,7 +13,7 @@ userRoutes.post('/user/register', async (ctx) => {
   let result = await user.exists();
   if (result) ctx.throw(400, 'user with that username already exists');
   else {
-    user.passwordHash = User.hashPassword(ctx.request.body.password);
+    user.password = User.hashPassword(ctx.request.body.password);
     let userId = await user.save();
     // call login from koa-passport to trigger creation of the session
     console.log(`user: ${Object.keys(user)}`);

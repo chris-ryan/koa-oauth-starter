@@ -1,4 +1,5 @@
 import Koa from 'koa';
+import cors from '@koa/cors';
 import session from 'koa-session';
 import bodyParser from 'koa-bodyparser';
 import passport from 'koa-passport';
@@ -40,6 +41,7 @@ dbConnect().then(() => {
   console.log('database connected');
   // sessions
   app.keys = ['fh784tu03fgyerfh2gf9refiy23f9423'];
+  app.use(cors({credentials:true}));
   app.use(session({
     store: getSessionStore()
   }, app));

@@ -3,6 +3,7 @@ import passport from 'koa-passport';
 import LocalStrategy from 'passport-local';
 import { ObjectID } from 'mongodb';
 import { getCollection } from './db/index';
+import User from './api/users/model';
 
 const options = {};
 
@@ -14,13 +15,13 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   console.log(`deserializing user: ${id}`)
-  const collection = await getCollection('users');
-  return collection.findOne({_id: id})
-  .then((user) => {
-    console.log(`deserialized user: ${user}`)
+  const user = await User.findById(id);
+  if (user) {
+    console.log(`deserialized user found: ${user}`)
     done(null, user);
-  })
-  .catch((err) => { done(err,null); });
+  } else {
+    done(new Error('user not found'),null);
+  }
 });
 
 passport.use(new LocalStrategy(options, async (username, password, done) => {
@@ -28,9 +29,14 @@ passport.use(new LocalStrategy(options, async (username, password, done) => {
   const user = await collection.findOne({ 'username': username })
   .catch((err) => { return done(err); });
   if (!user) return done(null, false);
-  bcrypt.compare(password, user.passwordHash, function(err,res) {
+  if (!user.id) user.id = user._id; // delete this?
+  console.log(`username: ${user.username}`);
+  bcrypt.compare(password, user.password, function(err,res) {
     if(err){ console.error(err) }
-    if(res) return done(null, user);
+    if(res) {
+      console.log(`returning user: ${Object.keys(user)}`);
+      return done(null, user); 
+    }
     else return done(null, false);
   })
 }));

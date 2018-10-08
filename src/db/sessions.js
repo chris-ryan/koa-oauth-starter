@@ -1,39 +1,25 @@
 import { getCollection } from './index';
 
 // getSessionStore:
-// returns object containing the methods required & defined by koa-session-store
+// returns object containing the methods needed by koa-session-store
 export function getSessionStore() {
   return {
     get: async (key, maxAge, { rolling }) => {
       console.log('getting session store from db');
-      getCollection('sessions').then((col) => {
-        col.findOne({_id: key}).then((doc) => {
-          return doc.sess;
-        });
-      }).catch(err => console.error(err));
+      const sessCol = await getCollection('sessions');
+      const doc = await sessCol.findOne({_id: key});
+      if (doc) return doc.session;
+      return null;
     },
-    set: async (key, sess, maxAge, { rolling, changed }) => {
+    set: async (key, session, maxAge, { rolling, changed }) => {
       console.log('setting session store from db');
-      getCollection('sessions').then((col) => {
-        col.insertOne({_id: key, maxAge, sess});
-      }).catch(err => console.error(err));
+      const sessCol = await getCollection('sessions');
+      await sessCol.updateOne({_id: key},{ $set: {_id: key, maxAge, session}},{ upsert: true});
     },
-    destroy: async (key) => { 
-      getCollection('sessions').then((col) => {
-        col.deleteOne({_id: key});
-      }).catch(err => console.error(err));
+    destroy: async (key) => {
+      console.log('destroying session');
+      const sessCol = await getCollection('sessions');
+      await sessCol.deleteOne({_id: key});
     }
   }
-  // return {
-  //   get: (key, maxAge, { rolling }) => {
-  //     collection.findOne({_id: key}).then((doc) => doc.sess);
-  //   },
-  //   set: async (key, sess, maxAge, { rolling, changed }) => {
-  //     await collection.insertOne({_id: key, maxAge, sess})
-  //     .catch(err => console.err(err));
-  //   },
-  //   destroy: async (key) => {
-  //     await collection.deleteOne({_id: key}).catch(err => console.err(err));
-  //   }
-  // }
 }

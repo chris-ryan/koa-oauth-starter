@@ -27,6 +27,7 @@ import User from './model';
 // }
 
 export async function userStatus (ctx) {
+  console.log(`ctx.req.user: ${ctx.req.user}`);
   console.log(`isAuthenticated: ${ctx.isAuthenticated()}`);
   if (ctx.isAuthenticated()) {
   ctx.type = 'html';
