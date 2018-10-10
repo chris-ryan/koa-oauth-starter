@@ -27,6 +27,7 @@
     "koa-router": "^7.4.0",
     "koa-session": "^5.9.0",
     "mongodb": "^3.1.6",
+    "oauth2orize": "^1.11.0",
     "passport-local": "^1.0.0"
   }
 }
