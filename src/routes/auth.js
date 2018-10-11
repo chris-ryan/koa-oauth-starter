@@ -1,6 +1,7 @@
 import KoaRouter from 'koa-router';
 import passport from 'koa-passport';
 import fs from 'fs';
+import { loginUser } from '../auth/controller';
 import { userStatus } from '../api/users/controller';
 
 const authRoutes = new KoaRouter();
@@ -25,14 +26,8 @@ authRoutes.get('/auth/authorize', async (ctx) => {
   
 // })
 
-authRoutes.get('/auth/login', async (ctx) => {
-  if (!ctx.isAuthenticated()) {
-    ctx.type = 'html';
-    ctx.body = fs.createReadStream('./src/views/login.html');
-  } else {
-    ctx.redirect('/auth/status');
-  }
-})
+// /auth/login -> loginUser: Authenticates the user and redirects to /auth/authorize
+authRoutes.get('/auth/login', loginUser)
 
 authRoutes.get('/auth/logout', async (ctx) => {
   if (ctx.isAuthenticated()) {
