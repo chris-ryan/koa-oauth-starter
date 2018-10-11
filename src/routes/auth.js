@@ -2,25 +2,11 @@ import KoaRouter from 'koa-router';
 import passport from 'koa-passport';
 import fs from 'fs';
 import { loginUser } from '../auth/controller';
-import { userStatus } from '../api/users/controller';
+import { authRequest, userStatus } from '../api/users/controller';
 
 const authRoutes = new KoaRouter();
 
-authRoutes.get('/auth/authorize', async (ctx) => {
-  console.log(ctx.query);
-  // check for required query parameters
-  if (ctx.query.response_type && ctx.query.client_id && ctx.query.redirect_uri) {
-    console.log('all good')
-  } else {
-    ctx.throw(400);
-  }
-  // if (!ctx.isAuthenticated()) {
-  //   ctx.type = 'html';
-  //   ctx.body = fs.createReadStream('./src/views/login.html');
-  // } else {
-  //   ctx.redirect('/auth/status');
-  // }
-})
+authRoutes.get('/auth/authorize', authRequest)
 
 // authRoutes.post('/auth/authorize/decision', async (ctx) => {
   
