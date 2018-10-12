@@ -23,11 +23,13 @@
     "esm": "^3.0.82",
     "koa": "^2.5.3",
     "koa-bodyparser": "^4.2.1",
+    "koa-connect": "^2.0.1",
     "koa-passport": "^4.1.1",
     "koa-router": "^7.4.0",
     "koa-session": "^5.9.0",
     "mongodb": "^3.1.6",
     "oauth2orize": "^1.11.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "uid2": "0.0.3"
   }
 }
