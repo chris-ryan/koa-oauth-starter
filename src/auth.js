@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import passport from 'koa-passport';
 import LocalStrategy from 'passport-local';
 import { ObjectID } from 'mongodb';

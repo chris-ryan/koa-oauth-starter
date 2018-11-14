@@ -86,6 +86,7 @@ export async function loginUser (ctx) {
 
 export async function renderLogin (ctx) {
   // check for required query parameters
+  console.log('renering login');
   if (ctx.query.response_type && ctx.query.client_id && ctx.query.redirect_uri) {
     const queryString = `response_type=${ctx.query.response_type}&client_id=${ctx.query.client_id}&redirect_uri=${ctx.query.redirect_uri}`;
     if (!ctx.isAuthenticated()) {

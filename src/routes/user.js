@@ -2,8 +2,11 @@ import KoaRouter from 'koa-router';
 import passport from 'koa-passport';
 import User from '../api/users/model';
 // import { registerUser } from '../api/users/controller';
+import { getUserSessions } from '../api/users/controller';
 
 const userRoutes = new KoaRouter();
+
+userRoutes.get('/user/:username/sessions', getUserSessions)
 
 // userRoutes.post('/user/register', registerUser);
 

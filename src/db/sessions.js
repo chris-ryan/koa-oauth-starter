@@ -23,3 +23,10 @@ export function getSessionStore() {
     }
   }
 }
+
+export async function getSessionsByUserId(id){ // note: requires id to be a string
+  // const passportUser = { 'user': '5bbaf3c12394230c3e3f69d6' };
+  const sessCol = await getCollection('sessions');
+  const userSessions = await sessCol.find({"session.passport.user": id}).toArray();
+  return userSessions;
+}

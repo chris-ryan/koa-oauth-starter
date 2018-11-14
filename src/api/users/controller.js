@@ -1,6 +1,19 @@
 import fs from 'fs';
 import passport from 'koa-passport';
+import { getSessionsByUserId } from '../../db/sessions';
 import User from './model';
+
+export async function getUserSessions (ctx) {
+  // check the user exists and is active
+  const user = await User.findByUsername(ctx.params.username);
+  if (user && user.active) {
+    // find the sessions with the user's id
+    const userSerialId = User.serializeUser(user);
+    const userSessions = await getSessionsByUserId(userSerialId);
+    console.log(userSessions.length);
+    ctx.body = user;
+  }
+}
 
 // export async function registerUser (ctx) {
 //   const user = new User(ctx.request.body);

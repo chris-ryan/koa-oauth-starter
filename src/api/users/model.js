@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ObjectID } from 'mongodb';
 import { getCollection } from '../../db/index';
 
@@ -52,5 +52,10 @@ export default class User {
     console.log('hashing password');
     const saltRounds = 5;
     return bcrypt.hashSync(password, saltRounds);
+  }
+
+  static serializeUser(user){
+    let userId = new ObjectID(user._id);
+    return userId.toHexString;
   }
 }
