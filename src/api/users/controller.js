@@ -10,8 +10,20 @@ export async function getUserSessions (ctx) {
     // find the sessions with the user's id
     const userSerialId = User.serializeUser(user);
     const userSessions = await getSessionsByUserId(userSerialId);
-    console.log(userSessions.length);
-    ctx.body = user;
+    // return the session if they haven't yet expired
+    const currentSessions = userSessions.filter(session => {
+      session.session._expire > new Date().getTime()
+    })
+    if (currentSessions.length > 0) {
+      ctx.body = currentSessions;
+    } else {
+      ctx.status = 404;
+      ctx.body = { status: 'error: no active sessions found' };
+    }
+  }
+  if (!user) {
+    ctx.status = 422;
+    ctx.body = { status: 'error: username invalid or not found' };
   }
 }
 

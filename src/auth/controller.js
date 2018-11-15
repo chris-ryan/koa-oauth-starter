@@ -1,4 +1,4 @@
-import * as oauth2orize from 'oauth2orize';
+import * as oauth2orize from 'oauth2orize-koa';
 import passport from 'koa-passport';
 import uid from 'uid2';
 import * as url from 'url';
@@ -26,7 +26,7 @@ const authServer = oauth2orize.createServer();
 authServer.grant(oauth2orize.grant.code(async (client, redirectURI, user, ares, done) => {
   const code = uid(16);
   var ac = new AuthorizationCode(code, client.id, redirectURI, user.id, ares.scope);
-  console.log(ac.save());
+  console.log('ac.save(): ' + ac.save());
   // ac.save(function(err) {
   //   if (err) { return done(err); }
   //   return done(null, code);
@@ -46,25 +46,51 @@ authServer.deserializeClient(async (id, done) => {
 });
 
 // authRequest is written as express-style middleware for oauth2orize compatibility
-export async function authRequest (req, res, next) {
-  // parse the url to populate req.query
-  const url_parts = url.parse(req.url, true);
-  req.query = url_parts.query;
+// export async function authRequest (req, res, next) {
+//   // parse the url to populate req.query
+//   const url_parts = url.parse(req.url, true);
+//   req.query = url_parts.query;
+//   // check for required query parameters
+//   if (req.query.response_type && req.query.client_id && req.query.redirect_uri) {
+//     // check the user is authenticated
+//     //if (!ctx.isAuthenticated()) ctx.redirect('/auth/login');
+//     console.log('calling authorize');
+//     return authServer.authorize(async (clientID, redirectURI, done) => {
+//     console.log('looking for the client');
+//       // find the client db record
+//       const collection = await getCollection('auth.clients').catch(err => console.error(err));
+//       let client = await collection.findOne({'id': clientID}).catch(err => done(err));
+//       if (!client) { return done(null, false); }
+//       else if (client.redirectUri != redirectURI) { return done(null, false); }
+//       else done(null, client, client.redirectURI);
+//       console.log(client);
+//     })(req, res, next);
+//   } else {
+//     throw new Error('Missing parameters');
+//   }
+// }
+// koa-style oauth2orize client authorization request endpoint
+export async function authRequest (ctx) {
   // check for required query parameters
-  if (req.query.response_type && req.query.client_id && req.query.redirect_uri) {
+  if (ctx.query.response_type && ctx.query.client_id && ctx.query.redirect_uri) {
     // check the user is authenticated
     //if (!ctx.isAuthenticated()) ctx.redirect('/auth/login');
     console.log('calling authorize');
-    return authServer.authorize(async (clientID, redirectURI, done) => {
-    console.log('looking for the client');
+    authServer.authorize(async (clientID, redirectURI) => {
+      console.log('looking for the client');
       // find the client db record
       const collection = await getCollection('auth.clients').catch(err => console.error(err));
-      let client = await collection.findOne({'id': clientID}).catch(err => done(err));
-      if (!client) { return done(null, false); }
-      else if (client.redirectUri != redirectURI) { return done(null, false); }
-      else done(null, client, client.redirectURI);
-      console.log(client);
-    })(req, res, next);
+      let client = await collection.findOne({'id': clientID}).catch(err => console.error(err));
+      if (!client) { return false; }
+      else if (client.redirectUri != redirectURI) { return false; }
+      else {
+        console.log(`client found in database: ${client}`);
+        return [client, client.redirectURI];
+      }
+    }),function(ctx) {
+      res.render('dialog', { transactionID: ctx.state.oauth2.transactionID,
+                             user: ctx.state.user, client: ctx.state.oauth2.client });
+    }
   } else {
     throw new Error('Missing parameters');
   }
@@ -86,7 +112,6 @@ export async function loginUser (ctx) {
 
 export async function renderLogin (ctx) {
   // check for required query parameters
-  console.log('renering login');
   if (ctx.query.response_type && ctx.query.client_id && ctx.query.redirect_uri) {
     const queryString = `response_type=${ctx.query.response_type}&client_id=${ctx.query.client_id}&redirect_uri=${ctx.query.redirect_uri}`;
     if (!ctx.isAuthenticated()) {
