@@ -23,26 +23,31 @@ class AuthorizationCode {
 const authServer = oauth2orize.createServer();
 
 // Register the functions required by oauth2orize
-authServer.grant(oauth2orize.grant.code(async (client, redirectURI, user, ares, done) => {
+authServer.grant(oauth2orize.grant.code(async (client, redirectURI, user, ares) => {
   const code = uid(16);
+  console.log('generating new Authorization code');
   var ac = new AuthorizationCode(code, client.id, redirectURI, user.id, ares.scope);
   console.log('ac.save(): ' + ac.save());
+  await ac.save();
+  console.log(`code: ${code}`);
+  return code;
   // ac.save(function(err) {
   //   if (err) { return done(err); }
   //   return done(null, code);
   // });
 }))
 
-authServer.serializeClient((client, callback) => {
-  callback(null, client.id);
+authServer.serializeClient((client) => {
+  console.log('serializing client');
+  return client.id;
 });
 
-authServer.deserializeClient(async (id, done) => {
+authServer.deserializeClient(async (id) => {
   console.log('deserializing client');
   const collection = await getCollection('auth.clients').catch(err => console.error(err));
-  let client = await collection.findOne({'id': id}).catch(err => done(err));
-  if (!client) { return done(null, false); }
-  return done(null, client);
+  let client = await collection.findOne({'id': id}).catch(err => console.error(err));
+  if (!client) { return false; }
+  return client;
 });
 
 // authRequest is written as express-style middleware for oauth2orize compatibility
@@ -71,12 +76,10 @@ authServer.deserializeClient(async (id, done) => {
 // }
 // koa-style oauth2orize client authorization request endpoint
 export async function authRequest (ctx) {
-  // check for required query parameters
-  if (ctx.query.response_type && ctx.query.client_id && ctx.query.redirect_uri) {
     // check the user is authenticated
     //if (!ctx.isAuthenticated()) ctx.redirect('/auth/login');
     console.log('calling authorize');
-    authServer.authorize(async (clientID, redirectURI) => {
+    return authServer.authorize(async function (clientID, redirectURI) {
       console.log('looking for the client');
       // find the client db record
       const collection = await getCollection('auth.clients').catch(err => console.error(err));
@@ -84,16 +87,10 @@ export async function authRequest (ctx) {
       if (!client) { return false; }
       else if (client.redirectUri != redirectURI) { return false; }
       else {
-        console.log(`client found in database: ${client}`);
-        return [client, client.redirectURI];
+        console.log(`client found in database: ${Object.values(client)}`);
+        return [client, client.redirectUri];
       }
-    }),function(ctx) {
-      res.render('dialog', { transactionID: ctx.state.oauth2.transactionID,
-                             user: ctx.state.user, client: ctx.state.oauth2.client });
-    }
-  } else {
-    throw new Error('Missing parameters');
-  }
+    })(ctx);
 }
 
 export async function loginUser (ctx) {
