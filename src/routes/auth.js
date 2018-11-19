@@ -6,11 +6,7 @@ import { userStatus } from '../api/users/controller';
 
 const authRoutes = new KoaRouter();
 
-authRoutes.get('/auth/authorize', authRequest, function(ctx) {
-  console.log('authorize endpoint called');
-  res.render('dialog', { transactionID: ctx.state.oauth2.transactionID,
-    user: ctx.state.user, client: ctx.state.oauth2.client });
-});
+authRoutes.get('/auth/authorize', authRequest);
 
 // authRoutes.post('/auth/authorize/decision', async (ctx) => {
   

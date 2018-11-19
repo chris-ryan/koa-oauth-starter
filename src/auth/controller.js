@@ -90,7 +90,17 @@ export async function authRequest (ctx) {
         console.log(`client found in database: ${Object.values(client)}`);
         return [client, client.redirectUri];
       }
-    })(ctx);
+    }),
+    function(ctx) {
+      ctx.type = 'html';
+      ctx.body = `<html><body><h2>Do you authorise the CREDIS web app to access your account?</h2>
+        <p>Transaction ID: ${ctx.state.oauth2.transactionID}</p>
+        <p>User: ${ctx.state.user}</p>
+        <p>Client: ${ctx.state.oauth2.client}</p>
+      </body></html>`;
+      // res.render('dialog', { transactionID: ctx.state.oauth2.transactionID,
+      //   user: ctx.state.user, client: ctx.state.oauth2.client });
+    }(ctx);
 }
 
 export async function loginUser (ctx) {
