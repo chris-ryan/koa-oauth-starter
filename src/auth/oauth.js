@@ -1,5 +1,6 @@
 import * as oauth2orize from 'oauth2orize-koa';
 import passport from 'koa-passport';
+import KoaRouter from 'koa-router';
 import uid from 'uid2';
 import * as url from 'url';
 import { getCollection } from '../db/index';
@@ -19,6 +20,8 @@ class AuthorizationCode {
     return result;
   }
 }
+
+const oAuthRoutes = new KoaRouter();
 
 const authServer = oauth2orize.createServer();
 
@@ -75,11 +78,8 @@ authServer.deserializeClient(async (id) => {
 //   }
 // }
 // koa-style oauth2orize client authorization request endpoint
-export async function authRequest (ctx) {
-    // check the user is authenticated
-    //if (!ctx.isAuthenticated()) ctx.redirect('/auth/login');
-    console.log('calling authorize');
-    return authServer.authorize(async function (clientID, redirectURI) {
+oAuthRoutes.get('/auth/authorize',
+  authServer.authorize(async function (clientID, redirectURI) {
       console.log('looking for the client');
       // find the client db record
       const collection = await getCollection('auth.clients').catch(err => console.error(err));
@@ -90,18 +90,24 @@ export async function authRequest (ctx) {
         console.log(`client found in database: ${Object.values(client)}`);
         return [client, client.redirectUri];
       }
-    }),
-    function(ctx) {
-      ctx.type = 'html';
-      ctx.body = `<html><body><h2>Do you authorise the CREDIS web app to access your account?</h2>
-        <p>Transaction ID: ${ctx.state.oauth2.transactionID}</p>
-        <p>User: ${ctx.state.user}</p>
-        <p>Client: ${ctx.state.oauth2.client}</p>
-      </body></html>`;
-      // res.render('dialog', { transactionID: ctx.state.oauth2.transactionID,
-      //   user: ctx.state.user, client: ctx.state.oauth2.client });
-    }(ctx);
-}
+  }),
+  async function(ctx) {
+    ctx.type = 'html';
+    const replaceSet = [
+      ['USERNAME', `${ctx.state.user.username}`],
+      ['APPNAME', `${ctx.state.oauth2.client.name}`],
+      ['TRANSACTIONID', `${ctx.state.oauth2.transactionID}`]
+    ];
+    ctx.body = await fileStringReplace('./src/views/authorize.html', replaceSet)
+    // `<html><body><h3>${ctx.state.user.username},
+    //     do you authorise the CREDIS web app to access your account?</h3>
+    //   <p>Transaction ID: ${ctx.state.oauth2.transactionID}</p>
+    //   <p>Client: ${ctx.state.oauth2.client}</p>
+    //   </body></html>`;
+  }
+);
+
+// oAuthRoutes.post('/auth/decision', authServer.decision());
 
 export async function loginUser (ctx) {
   console.log(`authenticating user: ${ctx.req.user}`);
@@ -124,8 +130,8 @@ export async function renderLogin (ctx) {
     if (!ctx.isAuthenticated()) {
       console.log(ctx.query);
       ctx.type = 'html';
-      // ctx.body = fs.createReadStream('./src/views/login.html');
-      ctx.body = await fileStringReplace('./src/views/login.html', 'FORMACTION', `/auth/login?${queryString}`)
+      const replaceSet = [['FORMACTION', `/auth/login?${queryString}`]];
+      ctx.body = await fileStringReplace('./src/views/login.html', replaceSet)
     } else {
       ctx.redirect(`/auth/authorize?${queryString}`);
     }
@@ -133,3 +139,5 @@ export async function renderLogin (ctx) {
     ctx.throw(400);
   }
 }
+
+export { oAuthRoutes }

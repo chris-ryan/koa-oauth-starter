@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Authorize App</title>
+</head>
+<body>
+  <h1>Authorize Account Access</h1>
+  <p>USERNAME</p>
+<p><b>APPNAME</b> is requesting access to your account.</p>
+<p>Do you approve?</p>
+
+<form action="/auth/decision" method="post">
+  <input name="transaction_id" type="hidden" value="TRANSACTIONID">
+  <div>
+    <input type="submit" value="Allow" id="allow">
+    <input type="submit" value="Deny" name="cancel" id="deny">
+  </div>
+</form>
+</body>
+</html>

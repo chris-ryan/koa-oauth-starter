@@ -8,6 +8,7 @@ import { dbConnect } from './db/index';
 import { getSessionStore } from './db/sessions';
 import { authRoutes } from './routes/auth';
 import { indexRoutes } from './routes/index';
+import { oAuthRoutes } from './auth/oauth';
 import { userRoutes } from './routes/user';
 import './auth.js';
 
@@ -52,6 +53,7 @@ dbConnect().then(() => {
   // use the routes defined in ./routes
   app.use(indexRoutes.routes());
   app.use(authRoutes.routes());
+  app.use(oAuthRoutes.routes());
   app.use(userRoutes.routes());
 
   app.listen(PORT, () => {
