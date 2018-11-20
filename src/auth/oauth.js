@@ -2,7 +2,6 @@ import * as oauth2orize from 'oauth2orize-koa';
 import passport from 'koa-passport';
 import KoaRouter from 'koa-router';
 import uid from 'uid2';
-import * as url from 'url';
 import { getCollection } from '../db/index';
 import { fileStringReplace } from '../utils/file';
 
@@ -14,9 +13,16 @@ class AuthorizationCode {
     this.scope = scope;
     this.createdAt = new Date();
   }
-  async save () {
+  async findOne(code) {
+    console.log('retreiving auth code from database');
     const collection = await getCollection('auth.codes').catch(err => console.error(err));
-    let result = await collection.insertOne(this).catch(err => done(err));
+    let result = await collection.findOne({'code': code}).catch(err => console.error(err));
+    return result;
+  }
+  async save () {
+    console.log('writing auth code to database');
+    const collection = await getCollection('auth.codes').catch(err => console.error(err));
+    let result = await collection.insertOne(this).catch(err => console.error(err));
     return result;
   }
 }
@@ -26,18 +32,25 @@ const oAuthRoutes = new KoaRouter();
 const authServer = oauth2orize.createServer();
 
 // Register the functions required by oauth2orize
-authServer.grant(oauth2orize.grant.code(async (client, redirectURI, user, ares) => {
+authServer.grant(oauth2orize.grant.code(async function (client, redirectURI, user, decision, ares) {
+  console.log(`client: ${client.name}
+  redirectURI: ${redirectURI}
+  user: ${user.username}
+  decision: ${Object.keys(decision)}: ${Object.values(decision)}`);
+  console.log(`ares: ${Object.keys(ares)}`);
   const code = uid(16);
   console.log('generating new Authorization code');
-  var ac = new AuthorizationCode(code, client.id, redirectURI, user.id, ares.scope);
-  console.log('ac.save(): ' + ac.save());
+  var ac = new AuthorizationCode(code, client.id, redirectURI, user.username, ares.scope);
   await ac.save();
-  console.log(`code: ${code}`);
   return code;
-  // ac.save(function(err) {
-  //   if (err) { return done(err); }
-  //   return done(null, code);
-  // });
+}))
+
+authServer.exchange(oauth2orize.exchange.code(async function(client, code, redirectURI){
+  console.log('retrieving code from db');
+  code = await AuthorizationCode.findOne(code);
+  const token = uid(256);
+  //save token to db
+  return token;
 }))
 
 authServer.serializeClient((client) => {
@@ -53,31 +66,7 @@ authServer.deserializeClient(async (id) => {
   return client;
 });
 
-// authRequest is written as express-style middleware for oauth2orize compatibility
-// export async function authRequest (req, res, next) {
-//   // parse the url to populate req.query
-//   const url_parts = url.parse(req.url, true);
-//   req.query = url_parts.query;
-//   // check for required query parameters
-//   if (req.query.response_type && req.query.client_id && req.query.redirect_uri) {
-//     // check the user is authenticated
-//     //if (!ctx.isAuthenticated()) ctx.redirect('/auth/login');
-//     console.log('calling authorize');
-//     return authServer.authorize(async (clientID, redirectURI, done) => {
-//     console.log('looking for the client');
-//       // find the client db record
-//       const collection = await getCollection('auth.clients').catch(err => console.error(err));
-//       let client = await collection.findOne({'id': clientID}).catch(err => done(err));
-//       if (!client) { return done(null, false); }
-//       else if (client.redirectUri != redirectURI) { return done(null, false); }
-//       else done(null, client, client.redirectURI);
-//       console.log(client);
-//     })(req, res, next);
-//   } else {
-//     throw new Error('Missing parameters');
-//   }
-// }
-// koa-style oauth2orize client authorization request endpoint
+// oauth2orize API endpoints
 oAuthRoutes.get('/auth/authorize',
   authServer.authorize(async function (clientID, redirectURI) {
       console.log('looking for the client');
@@ -99,15 +88,8 @@ oAuthRoutes.get('/auth/authorize',
       ['TRANSACTIONID', `${ctx.state.oauth2.transactionID}`]
     ];
     ctx.body = await fileStringReplace('./src/views/authorize.html', replaceSet)
-    // `<html><body><h3>${ctx.state.user.username},
-    //     do you authorise the CREDIS web app to access your account?</h3>
-    //   <p>Transaction ID: ${ctx.state.oauth2.transactionID}</p>
-    //   <p>Client: ${ctx.state.oauth2.client}</p>
-    //   </body></html>`;
   }
 );
-
-// oAuthRoutes.post('/auth/decision', authServer.decision());
 
 export async function loginUser (ctx) {
   console.log(`authenticating user: ${ctx.req.user}`);
@@ -139,5 +121,12 @@ export async function renderLogin (ctx) {
     ctx.throw(400);
   }
 }
+
+oAuthRoutes.post('/auth/decision', ...authServer.decision());
+// oAuthRoutes.post('/auth/decision', (ctx) => {
+//   const decisionHandler = authServer.decision()
+//   console.log(`function 1: ${decisionHandler[0]}
+//   function 2: ${decisionHandler[1]}`);
+// });
 
 export { oAuthRoutes }

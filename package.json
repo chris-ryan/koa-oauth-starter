@@ -4,6 +4,7 @@
   "description": "A starter Koa app with OAuth2 routes",
   "main": "index.js",
   "scripts": {
+    "debug": "node -r dotenv/config --inspect \"./src/index.js\"",
     "dev": "node -r dotenv/config \"./src/index.js\"",
     "test": "mocha -r dotenv/config -r esm './test/**/*.test.js'"
   },
@@ -23,7 +24,6 @@
     "esm": "^3.0.82",
     "koa": "^2.5.3",
     "koa-bodyparser": "^4.2.1",
-    "koa-connect": "^2.0.1",
     "koa-passport": "^4.1.1",
     "koa-router": "^7.4.0",
     "koa-session": "^5.9.0",

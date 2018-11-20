@@ -12,7 +12,7 @@ export function getSessionStore() {
       return null;
     },
     set: async (key, session, maxAge, { rolling, changed }) => {
-      console.log('setting session store from db');
+      console.log('updating session store in db');
       const sessCol = await getCollection('sessions');
       await sessCol.updateOne({_id: key},{ $set: {_id: key, maxAge, session}},{ upsert: true});
     },
