@@ -43,10 +43,10 @@ dbConnect().then(() => {
   // sessions
   app.keys = ['fh784tu03fgyerfh2gf9refiy23f9423'];
   app.use(cors({credentials:true}));
-  app.use(bodyParser());
   app.use(session({
     store: getSessionStore()
   }, app));
+  app.use(bodyParser());
   app.use(passport.initialize());
   app.use(passport.session());
   
