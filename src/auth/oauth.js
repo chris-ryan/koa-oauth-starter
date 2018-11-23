@@ -65,10 +65,16 @@ export async function loginUser (ctx) {
   const username = ctx.req.user ? ctx.req.user : ctx.request.body.user;
   console.log(`authenticating user: ${username}`);
   return passport.authenticate('local', (err, user, info, status) => {
-    if (user) {
+    // If user authenticates from POST headers (local login html)
+    if (user && ctx.req.user) {
       ctx.login(user);
       console.log('redirecting to auth/authorize');
-      ctx.redirect(`/auth/authorize?response_type=${ctx.query.response_type}&client_id=${ctx.query.client_id}&redirect_uri=${ctx.query.redirect_uri}`);
+      ctx.redirect(`authorize?response_type=${ctx.query.response_type}&client_id=${ctx.query.client_id}&redirect_uri=${ctx.query.redirect_uri}`);
+    // If user authenticates from POST body (remote app UI)
+    } else if (user && !ctx.request.body.user) {
+      ctx.login(user);
+      console.log('responding with redirect path');
+      ctx.body = { redirect: '/authorize' };
     } else {
       ctx.status = 400;
       ctx.body = { status: 'error' };
