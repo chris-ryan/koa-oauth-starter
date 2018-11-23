@@ -61,7 +61,9 @@ authServer.deserializeClient(async (id) => {
 });
 
 export async function loginUser (ctx) {
-  console.log(`authenticating user: ${ctx.req.user}`);
+  // If the user credentials aren't passed in auth header, look in the body
+  const username = ctx.req.user ? ctx.req.user : ctx.request.body.user;
+  console.log(`authenticating user: ${username}`);
   return passport.authenticate('local', (err, user, info, status) => {
     if (user) {
       ctx.login(user);
